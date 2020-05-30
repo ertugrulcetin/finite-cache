@@ -1,4 +1,4 @@
-(defproject finite-cache "0.1.0-SNAPSHOT"
+(defproject finite-cache "0.1.0"
 
   :description "finite-cache is a Clojure caching library that allows you to limit the size of a cache object."
 

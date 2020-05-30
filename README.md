@@ -11,6 +11,7 @@ process. For Leiningen, add `:jvm-opts ["-Djdk.attach.allowAttachSelf"]` to
 `BOOT_JVM_OPTIONS="-Djdk.attach.allowAttachSelf"`.
 
 ## Usage
+[![Clojars Project](https://clojars.org/finite-cache/latest-version.svg)](https://clojars.org/finite-cache)
 
 ```clojure
 (require '[finite-cache.core :refer :all])
