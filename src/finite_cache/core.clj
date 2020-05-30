@@ -29,6 +29,7 @@
   (invalidate [this])
   (restart-executor [this])
   (shutdown-executor [this])
+  (executor-state [this])
   (memo-fn [this])
   (cache [this])
   (size [this]))
@@ -52,7 +53,6 @@
      :days TimeUnit/DAYS)])
 
 
-;;TODO logs -> debug
 (defn- ^ScheduledExecutorService create-executor [m opts]
   (let [service            (Executors/newSingleThreadScheduledExecutor)
         threshold-in-bytes (get-threshold-in-bytes (:threshold opts))
@@ -60,10 +60,10 @@
     (.scheduleAtFixedRate service
       (fn []
         (let [m-size (memory/measure m :bytes true)]
-          (log/info "Checking map size: " m-size)
+          (log/debug "Checking map size: " m-size)
           (when (>= m-size threshold-in-bytes)
             (.clear m)
-            (log/info "Cache cleared."))))
+            (log/debug "Cache cleared."))))
       (:delay opts) interval t-unit)
     service))
 
@@ -74,15 +74,21 @@
                       ^:unsynchronized-mutable opts]
   ICache
   (change-settings [this opts*]
-    (shutdown-executor this)
-    (set! opts opts*)
-    (when (.isTerminated executor)
-      (set! executor (create-executor m opts*))))
+    (let [{:keys [delay await-timeout]
+           :or   {delay 0 await-timeout 1000} :as opts*} opts*
+          opts* (assoc opts* :delay delay :await-timeout await-timeout)]
+      (shutdown-executor this)
+      (set! opts opts*)
+      (when (.isTerminated executor)
+        (set! executor (create-executor m opts*)))))
   (memo-fn [_] f)
   (cache [_] m)
   (size [_] (memory/measure m :bytes true))
   (invalidate [_]
-    (.clear m))
+    (.clear m)
+    m)
+  (executor-state [_]
+    (if (.isTerminated executor) :terminated :running))
   (restart-executor [this]
     (shutdown-executor this)
     (when (.isTerminated executor)
@@ -103,7 +109,7 @@
 
 
 (defn finite-cache [f {:keys [delay await-timeout]
-                       :or {delay 0 await-timeout 1000} :as opts}]
+                       :or   {delay 0 await-timeout 1000} :as opts}]
   (check-opts opts)
   (let [memoize* (util/fast-memoize f)
         fn*      (:fn memoize*)
@@ -114,14 +120,41 @@
 
 
 (comment
-  (s/explain ::options {:threshold     [300 :bytes]
-                        :every         [1000 :milliseconds]
-                        :delay         10
-                        :await-timeout 1000})
-  (def cch* (finite-cache + {:threshold     [300 :byte]
-                             :every         [1000 :milliseconds]
-                             :delay         123
-                             :await-timeout 1500}))
-  (change-settings cch* {})
-  (shutdown-executor cch*)
-  (invalidate cch*))
+  (def cache* (finite-cache + {;; when size of the map that holds cache exceeds 300MB, it will be cleared
+                               :threshold     [300 :mb]
+                               ;; executor that checks map's size every 15 minutes
+                               :every         [15 :minutes]
+                               ;; (Optional) initial delay before executor starts,
+                               ;; since :every's time unit is :minutes, :delay has the same time unit
+                               ;; so there is 5 minutes delay
+                               :delay         5
+                               ;; (Optional) await timeout when shutting down the executor, in milliseconds
+                               :await-timeout 1500}))
+
+  (def memoized-fn (memo-fn cache*))
+
+  (memoized-fn 1 2 3)
+  ;;=> 6
+
+  (size cache*)
+  ;; => 312 (cache's size)
+
+  (cache cache*)
+  ;; =>  {[1 2 3] 6} (cache itself)
+
+  (invalidate cache*)
+  ;; => {} (clears cache)
+
+  (change-settings cache* {:threshold [1 :gb]
+                           :every [2 :hours]})
+  ;; => changes cache' options and restarts the executor
+
+  (restart-executor cache*)
+  ;; => restarts executor
+
+  (shutdown-executor cache*)
+  ;; => shutdowns executor
+
+  (executor-state cache*)
+  ;;=> :terminated
+  )
