@@ -96,9 +96,9 @@
   (def cch* (finite-cache + {:threshold     [300 :byte]
                              :every         [1000 :milliseconds]
                              :delay         10
-                             :await-timeout 100
+                             :await-timeout 1000
                              }))
-  (change-settings cache* {})
+  (change-settings cch* {})
   (shutdown-executor cch*)
-  (invalidate cache*)
+  (invalidate cch*)
   )
