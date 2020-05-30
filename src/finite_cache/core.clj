@@ -102,14 +102,13 @@
     (throw (IllegalArgumentException. ^String (s/explain-str ::options opts)))))
 
 
-(defn finite-cache [f opts]
+(defn finite-cache [f {:keys [delay await-timeout]
+                       :or {delay 0 await-timeout 1000} :as opts}]
   (check-opts opts)
   (let [memoize* (util/fast-memoize f)
         fn*      (:fn memoize*)
         map*     (:map memoize*)
-        opts     (cond-> opts
-                   (not (:delay opts)) (assoc :delay 0)
-                   (not (:await-timeout opts)) (assoc :await-timeout 1000))
+        opts     (assoc opts :delay delay :await-timeout await-timeout)
         executor (create-executor map* opts)]
     (->FiniteCache fn* map* executor opts)))
 
@@ -121,8 +120,8 @@
                         :await-timeout 1000})
   (def cch* (finite-cache + {:threshold     [300 :byte]
                              :every         [1000 :milliseconds]
-                             :delay         10
-                             :await-timeout 1000}))
+                             :delay         123
+                             :await-timeout 1500}))
   (change-settings cch* {})
   (shutdown-executor cch*)
   (invalidate cch*))
