@@ -11,6 +11,11 @@
                  [org.tcrawley/dynapath "1.0.0"]
                  [clj-tuple "0.2.2"]]
 
+  :plugins [[lein-cljfmt "0.6.7"]]
+
+  :cljfmt {:indents {#".*" [[:inner 0]]}
+           :remove-consecutive-blank-lines? false}
+
   :min-lein-version "2.5.3"
 
   :resource-paths ["resources"]
@@ -21,4 +26,5 @@
 
   :source-paths ["src"]
 
-  :jvm-opts ["-Djdk.attach.allowAttachSelf"])
+  :jvm-opts ["-XX:-OmitStackTraceInFastThrow"
+             "-Djdk.attach.allowAttachSelf"])

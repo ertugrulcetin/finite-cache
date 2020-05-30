@@ -6,12 +6,12 @@
 
 (defonce url-mapping (atom #{}))
 (defonce shared-context-classloader
-         (delay
-           (or
-             (when-let [base-loader (RT/baseLoader)]
-               (when (instance? DynamicClassLoader base-loader)
-                 base-loader))
-             (DynamicClassLoader. (.getContextClassLoader (Thread/currentThread))))))
+  (delay
+    (or
+      (when-let [base-loader (RT/baseLoader)]
+        (when (instance? DynamicClassLoader base-loader)
+          base-loader))
+      (DynamicClassLoader. (.getContextClassLoader (Thread/currentThread))))))
 
 
 (defn- has-classloader-as-ancestor?
@@ -49,7 +49,7 @@
 
   (^DynamicClassLoader [^DynamicClassLoader classloader]
    (some #(when (instance? DynamicClassLoader %) %)
-         (classloader-hierarchy classloader))))
+     (classloader-hierarchy classloader))))
 
 
 (defn add-to-classpath!

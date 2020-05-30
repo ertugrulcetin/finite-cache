@@ -47,8 +47,8 @@
   Return a tuple of [classloader is-it-dynamic?]."
   []
   (let [dynamic-cl?
-                   #(#{"clojure.lang.DynamicClassLoader" "boot.AddableClassLoader"}
-                     (.getName (class %)))
+        #(#{"clojure.lang.DynamicClassLoader" "boot.AddableClassLoader"}
+          (.getName (class %)))
 
         ctx-loader (.getContextClassLoader (Thread/currentThread))]
     (if (dynamic-cl? ctx-loader)
@@ -84,7 +84,7 @@
        ;; In earlier JDKs, load tools.jar and get the class from there.
        (catch ClassNotFoundException _
          (Class/forName "com.sun.tools.attach.VirtualMachine"
-                        false @tools-jar-classloader))))
+           false @tools-jar-classloader))))
 
 
 (defn- get-self-pid
