@@ -56,7 +56,7 @@
 (defn- ^ScheduledExecutorService create-executor [m opts]
   (let [service            (Executors/newSingleThreadScheduledExecutor)
         threshold-in-bytes (get-threshold-in-bytes (:threshold opts))
-        [interval t-unit] (get-interval-and-time-unit (:every opts))]
+        [interval t-unit]  (get-interval-and-time-unit (:every opts))]
     (.scheduleAtFixedRate service
       (fn []
         (let [m-size (memory/measure m :bytes true)]
