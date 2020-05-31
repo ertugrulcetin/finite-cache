@@ -53,7 +53,8 @@
 
   (testing "exceeding threshold"
     (with-cache [cache (fc/finite-cache + {:threshold [300 :byte]
-                                           :every     [100 :milliseconds]})
+                                           :every     [100 :milliseconds]
+                                           :delay     50})
                  memoized-fn (fc/memo-fn cache)
                  _  (memoized-fn 1 2 3 4 5 6 7 8)
                  _  (memoized-fn 5 6 10)
