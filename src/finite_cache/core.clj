@@ -79,8 +79,10 @@
           opts* (assoc opts* :delay delay :await-timeout await-timeout)]
       (shutdown-executor this)
       (set! opts opts*)
-      (when (.isTerminated executor)
-        (set! executor (create-executor m opts*)))))
+      (if (.isTerminated executor)
+        (do (set! executor (create-executor m opts*))
+            opts*)
+        false)))
   (memo-fn [_] f)
   (cache [_] m)
   (size [_] (memory/measure m :bytes true))
